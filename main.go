@@ -3,6 +3,7 @@ package main
 import (
 	"belajar-go/controllers"
 	"belajar-go/initializers"
+	"belajar-go/middleware"
 
 	"github.com/gin-gonic/gin"
 )
@@ -21,6 +22,9 @@ func main() {
 	r.GET("/posts/:id", controllers.PostsShow)
 	r.PUT("/posts/:id", controllers.PostsUpdate)
 	r.DELETE("/posts/:id", controllers.PostsDelete)
+	r.POST("/signup", controllers.Signup)
+	r.POST("/login", controllers.Login)
+	r.POST("/validate", middleware.RequireAuth, controllers.Validate)
 
 	// Start server on port 8080 (default)
 	// Server will listen on 0.0.0.0:8080 (localhost:8080 on Windows)
