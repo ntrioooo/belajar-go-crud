@@ -49,7 +49,9 @@ func main() {
 
 		v1.GET("/posts", postH.List)
 		v1.GET("/posts/:id", postH.Show)
-		v1.POST("/posts", middleware.RequireAuth(jwtm), postH.Create) // bisa tambahkan RequireAuth di sini
+
+		// butuh login untuk create/update/delete
+		v1.POST("/posts", middleware.RequireAuth(jwtm), postH.Create)
 		v1.PUT("/posts/:id", middleware.RequireAuth(jwtm), postH.Update)
 		v1.DELETE("/posts/:id", middleware.RequireAuth(jwtm), postH.Delete)
 	}

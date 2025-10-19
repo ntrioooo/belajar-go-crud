@@ -20,12 +20,12 @@ func toDomainPost(m *Post) *domain.Post {
 	if m == nil {
 		return nil
 	}
-	return &domain.Post{ID: m.ID, Title: m.Title, Body: m.Body, CreatedAt: m.CreatedAt, UpdatedAt: m.UpdatedAt}
+	return &domain.Post{ID: m.ID, Title: m.Title, Body: m.Body, UserID: m.UserID, CreatedAt: m.CreatedAt, UpdatedAt: m.UpdatedAt}
 }
 
 func toModelPost(d *domain.Post) *Post {
 	if d == nil {
 		return nil
 	}
-	return &Post{ID: d.ID, Title: d.Title, Body: d.Body, CreatedAt: d.CreatedAt, UpdatedAt: d.UpdatedAt}
+	return &Post{ID: d.ID, Title: d.Title, Body: d.Body, UserID: d.UserID, CreatedAt: d.CreatedAt, UpdatedAt: d.UpdatedAt}
 }

@@ -16,6 +16,7 @@ type Post struct {
 	ID        uint `gorm:"primaryKey"`
 	Title     string
 	Body      string
+	UserID    uint `gorm:"index"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt *time.Time `gorm:"index"`

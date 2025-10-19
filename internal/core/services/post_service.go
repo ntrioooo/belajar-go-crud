@@ -2,6 +2,8 @@ package services
 
 import (
 	"context"
+	"errors"
+	"strings"
 
 	"belajar-go/internal/core/domain"
 	"belajar-go/internal/core/ports"
@@ -16,7 +18,16 @@ func NewPostService(posts ports.PostRepository) ports.PostService {
 }
 
 func (s *postService) Create(ctx context.Context, authorID uint, title, body string) (*domain.Post, error) {
-	p := &domain.Post{Title: title, Body: body}
+	title = strings.TrimSpace(title)
+	body = strings.TrimSpace(body)
+	if authorID == 0 {
+		return nil, errors.New("unauthorized")
+	}
+	if len(title) < 3 || len(body) < 3 {
+		return nil, errors.New("title/body too short")
+	}
+
+	p := &domain.Post{Title: title, Body: body, UserID: authorID}
 	if err := s.posts.Create(ctx, p); err != nil {
 		return nil, err
 	}

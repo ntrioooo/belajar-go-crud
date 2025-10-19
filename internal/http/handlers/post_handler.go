@@ -14,14 +14,23 @@ type PostHandler struct{ svc ports.PostService }
 func NewPostHandler(svc ports.PostService) *PostHandler { return &PostHandler{svc: svc} }
 
 func (h *PostHandler) Create(c *gin.Context) {
-	var in struct{ Title, Body string }
+	var in struct {
+		Title string `json:"title" binding:"required,min=3"`
+		Body  string `json:"body"  binding:"required,min=3"`
+	}
 	if err := c.ShouldBindJSON(&in); err != nil {
 		resp.BadRequest(c, err.Error())
 		return
 	}
-	// contoh: ambil user dari context (diisi oleh auth middleware)
-	// user := c.MustGet("user").(domain.User)
-	p, err := h.svc.Create(c, 0, in.Title, in.Body)
+
+	uidAny, ok := c.Get("userID") // di-set oleh RequireAuth
+	if !ok {
+		resp.Unauthorized(c, "unauthorized")
+		return
+	}
+	authorID := uidAny.(uint)
+
+	p, err := h.svc.Create(c, authorID, in.Title, in.Body)
 	if err != nil {
 		resp.BadRequest(c, err.Error())
 		return
