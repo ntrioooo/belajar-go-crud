@@ -19,7 +19,7 @@ func Load() *Config {
 	c := &Config{
 		Port:   getenv("PORT", "8080"),
 		Secret: mustGetenv("SECRET"),
-		DSN:    getenv("DATABASE_DSN", "host=localhost user=postgres password=password dbname=forum port=5432 sslmode=disable"),
+		DSN:    getenv("DATABASE_DSN", "host=localhost user=postgres password=password dbname=postgres port=5432 sslmode=disable"),
 	}
 	return c
 }

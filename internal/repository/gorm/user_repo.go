@@ -44,3 +44,36 @@ func (r *userRepo) FindByID(ctx context.Context, id uint) (*domain.User, error) 
 	}
 	return toDomainUser(&m), nil
 }
+
+func (r *userRepo) FindByUsername(ctx context.Context, username string) (*domain.User, error) {
+	var m User
+	if err := r.db.WithContext(ctx).Where("username = ?", username).First(&m).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return toDomainUser(&m), nil
+}
+
+func (r *userRepo) UpdateByID(ctx context.Context, id uint, fields map[string]any) error {
+	return r.db.WithContext(ctx).Model(&User{}).Where("id = ?", id).Updates(fields).Error
+}
+
+func (r *userRepo) ExistsEmailExcept(ctx context.Context, email string, exceptID uint) (bool, error) {
+	var cnt int64
+	if err := r.db.WithContext(ctx).Model(&User{}).
+		Where("email = ? AND id <> ?", email, exceptID).Count(&cnt).Error; err != nil {
+		return false, err
+	}
+	return cnt > 0, nil
+}
+
+func (r *userRepo) ExistsUsernameExcept(ctx context.Context, username string, exceptID uint) (bool, error) {
+	var cnt int64
+	if err := r.db.WithContext(ctx).Model(&User{}).
+		Where("username = ? AND id <> ?", username, exceptID).Count(&cnt).Error; err != nil {
+		return false, err
+	}
+	return cnt > 0, nil
+}

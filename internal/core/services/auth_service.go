@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"errors"
+	"regexp"
 	"strings"
 
 	"belajar-go/internal/core/domain"
@@ -21,14 +22,28 @@ func NewAuthService(users ports.UserRepository, jwt jwtutil.TokenManager) ports.
 	return &authService{users: users, jwt: jwt}
 }
 
-func (s *authService) Signup(ctx context.Context, email, password string) (*domain.User, error) {
+func (s *authService) Signup(ctx context.Context, email, username, password string) (*domain.User, error) {
 	email = strings.TrimSpace(strings.ToLower(email))
-	if email == "" || len(password) < 6 {
-		return nil, errors.New("invalid email or password too short")
+	username = strings.TrimSpace(strings.ToLower(username))
+
+	if email == "" || username == "" || len(password) < 6 {
+		return nil, errors.New("invalid signup payload")
+	}
+	if !regexp.MustCompile(`^[a-z0-9_\.]{3,20}$`).MatchString(username) {
+		return nil, errors.New("invalid username (use a-z, 0-9, underscore, dot; 3-20 chars)")
+	}
+
+	// cek unik username
+	if exist, _ := s.users.FindByUsername(ctx, username); exist != nil {
+		return nil, errors.New("username already taken")
+	}
+	// cek unik email (opsional: jika sudah unique index, repo akan error saat Create)
+	if exist, _ := s.users.FindByEmail(ctx, email); exist != nil {
+		return nil, errors.New("email already used")
 	}
 
 	hashed, _ := bcrypt.GenerateFromPassword([]byte(password), 10)
-	u := &domain.User{Email: email, Password: string(hashed)}
+	u := &domain.User{Email: email, Username: username, Password: string(hashed)}
 	if err := s.users.Create(ctx, u); err != nil {
 		return nil, err
 	}

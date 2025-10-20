@@ -17,7 +17,7 @@ func NewPostService(posts ports.PostRepository) ports.PostService {
 	return &postService{posts: posts}
 }
 
-func (s *postService) Create(ctx context.Context, authorID uint, title, body string) (*domain.Post, error) {
+func (s *postService) Create(ctx context.Context, authorID uint, title, body string, categoryID uint) (*domain.Post, error) {
 	title = strings.TrimSpace(title)
 	body = strings.TrimSpace(body)
 	if authorID == 0 {
@@ -27,27 +27,27 @@ func (s *postService) Create(ctx context.Context, authorID uint, title, body str
 		return nil, errors.New("title/body too short")
 	}
 
-	p := &domain.Post{Title: title, Body: body, UserID: authorID}
+	p := &domain.Post{Title: title, Body: body, UserID: authorID, CategoryID: categoryID}
 	if err := s.posts.Create(ctx, p); err != nil {
 		return nil, err
 	}
 	return p, nil
 }
 
-func (s *postService) GetByID(ctx context.Context, id uint) (*domain.Post, error) {
-	return s.posts.FindByID(ctx, id)
-}
+// func (s *postService) GetByID(ctx context.Context, id uint) (*domain.Post, error) {
+// 	return s.posts.FindByID(ctx, id)
+// }
 
-func (s *postService) List(ctx context.Context) ([]domain.Post, error) {
-	return s.posts.List(ctx)
-}
+// func (s *postService) List(ctx context.Context) ([]domain.Post, error) {
+// 	return s.posts.List(ctx)
+// }
 
-func (s *postService) Update(ctx context.Context, id uint, title, body string) (*domain.Post, error) {
+func (s *postService) Update(ctx context.Context, id uint, title, body string, categoryID uint) (*domain.Post, error) {
 	p, err := s.posts.FindByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
-	p.Title, p.Body = title, body
+	p.Title, p.Body, p.CategoryID = title, body, categoryID
 	if err := s.posts.Update(ctx, p); err != nil {
 		return nil, err
 	}
@@ -56,4 +56,73 @@ func (s *postService) Update(ctx context.Context, id uint, title, body string) (
 
 func (s *postService) Delete(ctx context.Context, id uint) error {
 	return s.posts.Delete(ctx, id)
+}
+
+func (s *postService) List(ctx context.Context, viewerID uint) ([]domain.PostView, error) {
+	posts, err := s.posts.List(ctx)
+	if err != nil {
+		return nil, err
+	}
+	// kumpulkan userIDs
+	ids := make([]uint, 0, len(posts))
+	for i := range posts {
+		ids = append(ids, posts[i].UserID)
+	}
+	authorMap, _ := s.posts.BatchAuthorUsernames(ctx, ids) // ignore err kecil
+
+	out := make([]domain.PostView, 0, len(posts))
+	for i := range posts {
+		p := posts[i]
+		cnt, _ := s.posts.CountLikes(ctx, p.ID)
+		liked := false
+		if viewerID != 0 {
+			liked, _ = s.posts.IsLiked(ctx, viewerID, p.ID)
+		}
+		out = append(out, domain.PostView{
+			Post:           p,
+			AuthorUsername: authorMap[p.UserID],
+			LikeCount:      cnt,
+			LikedByMe:      liked,
+		})
+	}
+	return out, nil
+}
+
+func (s *postService) GetByID(ctx context.Context, viewerID, id uint) (*domain.PostView, error) {
+	p, err := s.posts.FindByID(ctx, id)
+	if err != nil || p == nil {
+		return nil, err
+	}
+	cnt, _ := s.posts.CountLikes(ctx, p.ID)
+	liked := false
+	if viewerID != 0 {
+		liked, _ = s.posts.IsLiked(ctx, viewerID, p.ID)
+	}
+	authorMap, _ := s.posts.BatchAuthorUsernames(ctx, []uint{p.UserID})
+	view := &domain.PostView{
+		Post: *p, AuthorUsername: authorMap[p.UserID], LikeCount: cnt, LikedByMe: liked,
+	}
+	return view, nil
+}
+
+func (s *postService) ToggleLike(ctx context.Context, userID, postID uint) (bool, int64, error) {
+	if userID == 0 {
+		return false, 0, errors.New("unauthorized")
+	}
+	liked, err := s.posts.IsLiked(ctx, userID, postID)
+	if err != nil {
+		return false, 0, err
+	}
+	if liked {
+		if err := s.posts.Unlike(ctx, userID, postID); err != nil {
+			return false, 0, err
+		}
+	} else {
+		if err := s.posts.Like(ctx, userID, postID); err != nil {
+			return false, 0, err
+		}
+	}
+	likedNow := !liked
+	count, _ := s.posts.CountLikes(ctx, postID)
+	return likedNow, count, nil
 }

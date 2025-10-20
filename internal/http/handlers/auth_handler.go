@@ -14,12 +14,12 @@ type AuthHandler struct{ svc ports.AuthService }
 func NewAuthHandler(svc ports.AuthService) *AuthHandler { return &AuthHandler{svc: svc} }
 
 func (h *AuthHandler) Signup(c *gin.Context) {
-	var in struct{ Email, Password string }
+	var in struct{ Email, Username, Password string }
 	if err := c.ShouldBindJSON(&in); err != nil {
 		resp.BadRequest(c, err.Error())
 		return
 	}
-	u, err := h.svc.Signup(c, in.Email, in.Password)
+	u, err := h.svc.Signup(c, in.Email, in.Username, in.Password)
 	if err != nil {
 		resp.BadRequest(c, err.Error())
 		return
