@@ -72,5 +72,5 @@ func (h *CategoryHandler) Delete(c *gin.Context) {
 		resp.BadRequest(c, err.Error())
 		return
 	}
-	resp.NoContent(c)
+	resp.OK(c, gin.H{"message": "Successfully to deleted category", "status": "success"})
 }

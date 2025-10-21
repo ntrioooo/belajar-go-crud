@@ -91,7 +91,7 @@ func (h *PostHandler) Delete(c *gin.Context) {
 		resp.BadRequest(c, err.Error())
 		return
 	}
-	resp.NoContent(c)
+	resp.OK(c, gin.H{"message": "Successfully to deleted post", "status": "success"})
 }
 
 func (h *PostHandler) ToggleLike(c *gin.Context) {
