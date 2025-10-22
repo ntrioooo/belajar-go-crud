@@ -101,3 +101,33 @@ func (r *postRepo) BatchAuthorUsernames(ctx context.Context, userIDs []uint) (ma
 	}
 	return m, nil
 }
+
+func (r *postRepo) BatchCategoryNames(ctx context.Context, ids []uint) (map[uint]string, error) {
+	if len(ids) == 0 {
+		return map[uint]string{}, nil
+	}
+	// hilangkan duplikat biar query efisien
+	uniq := make(map[uint]struct{}, len(ids))
+	outIDs := make([]uint, 0, len(ids))
+	for _, id := range ids {
+		if _, ok := uniq[id]; !ok {
+			uniq[id] = struct{}{}
+			outIDs = append(outIDs, id)
+		}
+	}
+
+	var cs []Category
+	if err := r.db.WithContext(ctx).
+		Model(&Category{}).
+		Where("id IN ?", outIDs).
+		Select("id, name").
+		Find(&cs).Error; err != nil {
+		return nil, err
+	}
+
+	m := make(map[uint]string, len(cs))
+	for i := range cs {
+		m[cs[i].ID] = cs[i].Name
+	}
+	return m, nil
+}

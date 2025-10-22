@@ -65,9 +65,9 @@ func main() {
 
 		v1.GET("/categories", categoryH.List)
 		v1.GET("/categories/:id", categoryH.Show)
-		v1.POST("/categories", middleware.RequireAuth(jwtm), categoryH.Create)
-		v1.PUT("/categories/:id", middleware.RequireAuth(jwtm), categoryH.Update)
-		v1.DELETE("/categories/:id", middleware.RequireAuth(jwtm), categoryH.Delete)
+		v1.POST("/categories", middleware.RequireAuth(jwtm), middleware.RequireAdmin(userRepo), categoryH.Create)
+		v1.PUT("/categories/:id", middleware.RequireAuth(jwtm), middleware.RequireAdmin(userRepo), categoryH.Update)
+		v1.DELETE("/categories/:id", middleware.RequireAuth(jwtm), middleware.RequireAdmin(userRepo), categoryH.Delete)
 	}
 
 	log.Println("listening on :" + cfg.Port)

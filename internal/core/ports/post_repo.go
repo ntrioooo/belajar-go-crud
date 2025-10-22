@@ -18,4 +18,5 @@ type PostRepository interface {
 	IsLiked(ctx context.Context, userID, postID uint) (bool, error)
 	CountLikes(ctx context.Context, postID uint) (int64, error)
 	BatchAuthorUsernames(ctx context.Context, userIDs []uint) (map[uint]string, error)
+	BatchCategoryNames(ctx context.Context, ids []uint) (map[uint]string, error) // <-- tambahkan ini
 }

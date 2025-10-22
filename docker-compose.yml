@@ -1,0 +1,59 @@
+services:
+  belajar-go-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    volumes:
+      - belajar-go_db-data:/var/lib/postgresql/data
+
+  belajar-go-api:
+    build: .
+    command: ["/app/api"]
+    environment:
+      PORT: "8080"
+      SECRET: "supersecret"
+      DB_HOST: belajar-go-db
+      DB_PORT: "5432"
+      DB_USER: postgres
+      DB_PASS: postgres
+      DB_NAME: postgres
+      DB_SSLMODE: disable
+      DB_TIMEZONE: Asia/Jakarta
+    ports:
+      - "8080:8080"
+    depends_on:
+      belajar-go-db:
+        condition: service_healthy
+
+  seed:
+    build: .
+    entrypoint: ["/app/seed"]
+    environment:
+      DATABASE_URL: "host=belajar-go-db user=postgres password=postgres dbname=postgres port=5432 sslmode=disable TimeZone=Asia/Jakarta"
+      TZ: Asia/Jakarta
+    depends_on:
+      belajar-go-db:
+        condition: service_healthy
+    profiles: ["seed"]
+
+  adminer:
+    image: adminer
+    ports:
+      - "8081:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: belajar-go-db
+    depends_on:
+      belajar-go-db:
+        condition: service_healthy
+
+volumes:
+  belajar-go_db-data:

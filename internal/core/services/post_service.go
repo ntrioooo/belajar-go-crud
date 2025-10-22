@@ -64,11 +64,15 @@ func (s *postService) List(ctx context.Context, viewerID uint) ([]domain.PostVie
 		return nil, err
 	}
 	// kumpulkan userIDs
-	ids := make([]uint, 0, len(posts))
+	uids := make([]uint, 0, len(posts))
+	cids := make([]uint, 0, len(posts))
 	for i := range posts {
-		ids = append(ids, posts[i].UserID)
+		uids = append(uids, posts[i].UserID)
+		cids = append(cids, posts[i].CategoryID)
 	}
-	authorMap, _ := s.posts.BatchAuthorUsernames(ctx, ids) // ignore err kecil
+
+	authorMap, _ := s.posts.BatchAuthorUsernames(ctx, uids)
+	catMap, _ := s.posts.BatchCategoryNames(ctx, cids)
 
 	out := make([]domain.PostView, 0, len(posts))
 	for i := range posts {
@@ -81,6 +85,7 @@ func (s *postService) List(ctx context.Context, viewerID uint) ([]domain.PostVie
 		out = append(out, domain.PostView{
 			Post:           p,
 			AuthorUsername: authorMap[p.UserID],
+			CategoryName:   catMap[p.CategoryID], // <-- diisi dari map
 			LikeCount:      cnt,
 			LikedByMe:      liked,
 		})
@@ -99,8 +104,9 @@ func (s *postService) GetByID(ctx context.Context, viewerID, id uint) (*domain.P
 		liked, _ = s.posts.IsLiked(ctx, viewerID, p.ID)
 	}
 	authorMap, _ := s.posts.BatchAuthorUsernames(ctx, []uint{p.UserID})
+	catMap, _ := s.posts.BatchCategoryNames(ctx, []uint{p.CategoryID})
 	view := &domain.PostView{
-		Post: *p, AuthorUsername: authorMap[p.UserID], LikeCount: cnt, LikedByMe: liked,
+		Post: *p, AuthorUsername: authorMap[p.UserID], CategoryName: catMap[p.CategoryID], LikeCount: cnt, LikedByMe: liked,
 	}
 	return view, nil
 }

@@ -1,10 +1,9 @@
+// internal/config/config.go
 package config
 
 import (
-	"log"
+	"fmt"
 	"os"
-
-	"github.com/joho/godotenv"
 )
 
 type Config struct {
@@ -14,27 +13,33 @@ type Config struct {
 }
 
 func Load() *Config {
-	_ = godotenv.Load(".env") // optional: tidak fatal kalau tidak ada
+	port := getEnv("PORT", "8080")
+	secret := getEnv("SECRET", "changeme")
 
-	c := &Config{
-		Port:   getenv("PORT", "8080"),
-		Secret: mustGetenv("SECRET"),
-		DSN:    getenv("DATABASE_DSN", "host=localhost user=postgres password=password dbname=postgres port=5432 sslmode=disable"),
+	// Prioritas 1: DATABASE_URL (format DSN lengkap)
+	if dsn := os.Getenv("DATABASE_URL"); dsn != "" {
+		return &Config{Port: port, Secret: secret, DSN: dsn}
 	}
-	return c
+
+	// Prioritas 2: rakit dari DB_* (cocok untuk docker compose)
+	host := getEnv("DB_HOST", "belajar-go-db") // <— penting
+	user := getEnv("DB_USER", "postgres")
+	pass := getEnv("DB_PASS", "postgres")
+	name := getEnv("DB_NAME", "postgres")
+	dbPort := getEnv("DB_PORT", "5432")
+	ssl := getEnv("DB_SSLMODE", "disable")
+	tz := getEnv("DB_TIMEZONE", "Asia/Jakarta")
+
+	dsn := fmt.Sprintf(
+		"host=%s user=%s password=%s dbname=%s port=%s sslmode=%s TimeZone=%s",
+		host, user, pass, name, dbPort, ssl, tz,
+	)
+	return &Config{Port: port, Secret: secret, DSN: dsn}
 }
 
-func getenv(k, def string) string {
+func getEnv(k, def string) string {
 	if v := os.Getenv(k); v != "" {
 		return v
 	}
 	return def
-}
-
-func mustGetenv(k string) string {
-	v := os.Getenv(k)
-	if v == "" {
-		log.Fatalf("missing required env: %s", k)
-	}
-	return v
 }

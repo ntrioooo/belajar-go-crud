@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"errors"
+	"log"
 	"regexp"
 	"strings"
 
@@ -33,17 +34,15 @@ func (s *authService) Signup(ctx context.Context, email, username, password stri
 		return nil, errors.New("invalid username (use a-z, 0-9, underscore, dot; 3-20 chars)")
 	}
 
-	// cek unik username
 	if exist, _ := s.users.FindByUsername(ctx, username); exist != nil {
 		return nil, errors.New("username already taken")
 	}
-	// cek unik email (opsional: jika sudah unique index, repo akan error saat Create)
 	if exist, _ := s.users.FindByEmail(ctx, email); exist != nil {
 		return nil, errors.New("email already used")
 	}
 
 	hashed, _ := bcrypt.GenerateFromPassword([]byte(password), 10)
-	u := &domain.User{Email: email, Username: username, Password: string(hashed)}
+	u := &domain.User{Email: email, Username: username, Password: string(hashed), Role: domain.RoleMember}
 	if err := s.users.Create(ctx, u); err != nil {
 		return nil, err
 	}
@@ -63,6 +62,7 @@ func (s *authService) Login(ctx context.Context, email, password string) (string
 	if err != nil {
 		return "", nil, err
 	}
+	log.Printf("[DEBUG] user after repo: email=%s role=%q", u.Email, u.Role)
 	u.Password = ""
 	return token, u, nil
 }

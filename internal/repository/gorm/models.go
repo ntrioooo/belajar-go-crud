@@ -8,6 +8,7 @@ type User struct {
 	Email     string `gorm:"uniqueIndex;size:255"`
 	Username  string `gorm:"uniqueIndex;size:50"`
 	Password  string
+	Role      string `gorm:"index;size:20;default:member"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt *time.Time `gorm:"index"`
