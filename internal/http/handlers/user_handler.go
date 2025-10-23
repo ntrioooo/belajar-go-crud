@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"belajar-go/internal/core/ports"
+	"belajar-go/internal/http/dto"
 	"belajar-go/pkg/resp"
 
 	"github.com/gin-gonic/gin"
@@ -48,5 +49,5 @@ func (h *UserHandler) UpdateMe(c *gin.Context) {
 		resp.BadRequest(c, err.Error())
 		return
 	}
-	resp.OK(c, user)
+	resp.OK(c, dto.NewUserDTO(user))
 }

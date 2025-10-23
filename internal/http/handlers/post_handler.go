@@ -4,6 +4,7 @@ import (
 	"strconv"
 
 	"belajar-go/internal/core/ports"
+	"belajar-go/internal/http/dto"
 	"belajar-go/pkg/resp"
 
 	"github.com/gin-gonic/gin"
@@ -49,7 +50,7 @@ func (h *PostHandler) List(c *gin.Context) {
 		resp.Internal(c, err.Error())
 		return
 	}
-	resp.OK(c, ps)
+	resp.OK(c, dto.NewPostViewDTOs(ps))
 }
 
 func (h *PostHandler) Show(c *gin.Context) {
@@ -63,7 +64,7 @@ func (h *PostHandler) Show(c *gin.Context) {
 		resp.NotFound(c, "post not found")
 		return
 	}
-	resp.OK(c, p)
+	resp.OK(c, dto.NewPostViewDTO(p))
 }
 
 func (h *PostHandler) Update(c *gin.Context) {

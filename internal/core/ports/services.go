@@ -31,3 +31,20 @@ type CategoryService interface {
 	Update(ctx context.Context, id uint, name string) (*domain.Category, error)
 	Delete(ctx context.Context, id uint) error
 }
+
+type CommentService interface {
+	Create(ctx context.Context, userID, postID uint, parentID *uint, body string) (*domain.Comment, error)
+	GetByPost(ctx context.Context, viewerID, postID uint) ([]domain.CommentView, error)
+	GetReplies(ctx context.Context, viewerID, parentID uint) ([]domain.CommentView, error)
+	Delete(ctx context.Context, userID, commentID uint) error
+	ToggleLike(ctx context.Context, userID, commentID uint) (liked bool, likeCount int64, err error)
+}
+
+type RetweetService interface {
+	Toggle(ctx context.Context, userID, originalPostID uint, quoteBody *string) (retweeted bool, retweetCount int64, err error)
+	ListByUser(ctx context.Context, userID uint) ([]domain.RetweetView, error)
+}
+
+type ProfileService interface {
+	GetProfile(ctx context.Context, viewerID, profileUserID uint) (*domain.ProfileView, error)
+}

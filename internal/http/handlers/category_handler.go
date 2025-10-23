@@ -4,6 +4,7 @@ import (
 	"strconv"
 
 	"belajar-go/internal/core/ports"
+	"belajar-go/internal/http/dto"
 	"belajar-go/pkg/resp"
 
 	"github.com/gin-gonic/gin"
@@ -38,7 +39,12 @@ func (h *CategoryHandler) List(c *gin.Context) {
 		resp.Internal(c, err.Error())
 		return
 	}
-	resp.OK(c, cats)
+
+	out := make([]dto.CategoryDTO, 0, len(cats))
+	for i := range cats {
+		out = append(out, *dto.NewCategoryDTO(&cats[i].Category))
+	}
+	resp.OK(c, out)
 }
 
 func (h *CategoryHandler) Show(c *gin.Context) {

@@ -10,6 +10,7 @@ type PostRepository interface {
 	FindByID(ctx context.Context, id uint) (*domain.Post, error)
 	// GetByID(ctx context.Context, id uint) (*domain.Post, error)
 	List(ctx context.Context) ([]domain.Post, error)
+	ListByUser(ctx context.Context, userID uint) ([]domain.Post, error)
 	Update(ctx context.Context, p *domain.Post) error
 	Delete(ctx context.Context, id uint) error
 

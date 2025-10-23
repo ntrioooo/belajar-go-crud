@@ -40,6 +40,6 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	}
 	// set cookie optional
 	c.SetSameSite(http.SameSiteLaxMode)
-	c.SetCookie("Authorization", token, 3600*24*30, "/", "", false, true)
+	c.SetCookie("Authorization", token, 3600*24*30, "/", "localhost", true, true)
 	resp.OK(c, gin.H{"token": token, "user": u})
 }

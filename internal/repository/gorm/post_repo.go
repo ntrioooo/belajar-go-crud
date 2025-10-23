@@ -48,7 +48,13 @@ func (r *postRepo) List(ctx context.Context) ([]domain.Post, error) {
 
 func (r *postRepo) Update(ctx context.Context, p *domain.Post) error {
 	m := toModelPost(p)
-	return r.db.WithContext(ctx).Model(&Post{}).Where("id=?", m.ID).Updates(map[string]any{"title": m.Title, "body": m.Body}).Error
+	return r.db.WithContext(ctx).Model(&Post{}).
+		Where("id=?", m.ID).
+		Updates(map[string]any{
+			"title":       m.Title,
+			"body":        m.Body,
+			"category_id": m.CategoryID, // <-- penting!
+		}).Error
 }
 
 func (r *postRepo) Delete(ctx context.Context, id uint) error {
@@ -130,4 +136,18 @@ func (r *postRepo) BatchCategoryNames(ctx context.Context, ids []uint) (map[uint
 		m[cs[i].ID] = cs[i].Name
 	}
 	return m, nil
+}
+
+func (r *postRepo) ListByUser(ctx context.Context, userID uint) ([]domain.Post, error) {
+	var ms []Post
+	if err := r.db.WithContext(ctx).
+		Where("user_id = ?", userID).
+		Order("id DESC").Find(&ms).Error; err != nil {
+		return nil, err
+	}
+	out := make([]domain.Post, 0, len(ms))
+	for i := range ms {
+		out = append(out, *toDomainPost(&ms[i]))
+	}
+	return out, nil
 }

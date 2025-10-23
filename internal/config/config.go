@@ -13,18 +13,18 @@ type Config struct {
 }
 
 func Load() *Config {
-	port := getEnv("PORT", "8080")
+	port := getEnv("PORT", "3001")
 	secret := getEnv("SECRET", "changeme")
 
-	// Prioritas 1: DATABASE_URL (format DSN lengkap)
+	// 1) DATABASE_URL kalau ada, dipakai duluan (baik lokal maupun docker)
 	if dsn := os.Getenv("DATABASE_URL"); dsn != "" {
 		return &Config{Port: port, Secret: secret, DSN: dsn}
 	}
 
-	// Prioritas 2: rakit dari DB_* (cocok untuk docker compose)
-	host := getEnv("DB_HOST", "belajar-go-db") // <— penting
+	// 2) Rakitan dari DB_*
+	host := getEnv("DB_HOST", defaultDBHost())
 	user := getEnv("DB_USER", "postgres")
-	pass := getEnv("DB_PASS", "postgres")
+	pass := getEnv("DB_PASS", "password")
 	name := getEnv("DB_NAME", "postgres")
 	dbPort := getEnv("DB_PORT", "5432")
 	ssl := getEnv("DB_SSLMODE", "disable")
@@ -42,4 +42,16 @@ func getEnv(k, def string) string {
 		return v
 	}
 	return def
+}
+
+// defaultDBHost: kalau jalan DI DALAM Docker, pakai nama service; kalau TIDAK, pakai localhost.
+func defaultDBHost() string {
+	if _, err := os.Stat("/.dockerenv"); err == nil {
+		return "belajar-go-db" // dalam container
+	}
+	// Boleh juga override manual pakai ENV RUN_MODE=local/docker
+	if os.Getenv("RUN_MODE") == "docker" {
+		return "belajar-go-db"
+	}
+	return "localhost" // proses lokal
 }
